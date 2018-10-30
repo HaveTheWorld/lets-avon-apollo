@@ -4,7 +4,6 @@ import { JWT_SECRET, JWT_EXPIRE } from '../../service/config'
 
 // Queries
 export const user = (parentValue, args, { req }) => {
-	console.log(req.user)
 	return req.user
 }
 
