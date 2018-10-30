@@ -14,3 +14,5 @@ export const MONGO_URL = process.env.MONGO_URL
 export const COOKIE_SECRET = process.env.COOKIE_SECRET
 export const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+export const JWT_SECRET = process.env.JWT_SECRET
+export const JWT_EXPIRE = IS_PROD ? process.env.JWT_EXPIRE : '365 days'

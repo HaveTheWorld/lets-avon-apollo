@@ -1,5 +1,9 @@
 type Query {
-	users: [UserType]
+	user: UserType
+}
+
+type Mutation {
+	login(username: String, password: String): String
 }
 
 type UserType {
