@@ -1,7 +1,10 @@
-import { users } from './resolvers/users'
+import { user, login } from './resolvers/users'
 
 export default {
 	Query: {
-		users
+		user
+	},
+	Mutation: {
+		login
 	}
 }

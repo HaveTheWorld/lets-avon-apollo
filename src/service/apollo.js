@@ -7,6 +7,7 @@ export default app => {
 	const server = new ApolloServer({
 		typeDefs: schema,
 		resolvers,
+		context: ctx => ctx,
 		playground: IS_DEV
 	})
 	server.applyMiddleware({ app, path: ENDPOINT_PATH })
