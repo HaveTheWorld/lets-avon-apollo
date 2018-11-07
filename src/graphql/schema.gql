@@ -1,10 +1,15 @@
+scalar Date
+
 type Query {
 	user: UserType
+	companiesList: [CompanyType]
 }
 
 type Mutation {
 	uploadCatalog(fields: CatalogInput, files: [Upload!]!): Boolean
 	login(username: String, password: String): String
+	addCompany(name: String!, startDate: Date!, finishDate: Date!): CompanyType
+	removeCompany(id: ID!): Boolean
 }
 
 type UserType {
@@ -12,6 +17,13 @@ type UserType {
 	username: String
 	password: String
 	isAdmin: Boolean
+}
+
+type CompanyType {
+	id: ID
+	name: String
+	startDate: Date
+	finishDate: Date
 }
 
 input CatalogInput {
