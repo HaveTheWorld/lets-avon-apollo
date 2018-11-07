@@ -3,6 +3,7 @@ type Query {
 }
 
 type Mutation {
+	uploadCatalog(fields: CatalogInput, files: [Upload!]!): Boolean
 	login(username: String, password: String): String
 }
 
@@ -11,4 +12,10 @@ type UserType {
 	username: String
 	password: String
 	isAdmin: Boolean
+}
+
+input CatalogInput {
+	catalog: String
+	title: String
+	company: String
 }
