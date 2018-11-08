@@ -3,31 +3,45 @@ scalar Date
 type Query {
 	user: UserType
 	companiesList: [CompanyType]
+	catalogsList: [CatalogType]
 }
 
 type Mutation {
-	uploadCatalog(fields: CatalogInput, files: [Upload!]!): Boolean
-	login(username: String, password: String): String
+	uploadCatalog(catalog: String!, title: String!, company: CompanyInput!, files: [Upload!]!): Boolean
+	login(username: String!, password: String!): String
 	addCompany(name: String!, startDate: Date!, finishDate: Date!): CompanyType
 	removeCompany(id: ID!): Boolean
 }
 
 type UserType {
-	id: ID
-	username: String
-	password: String
+	id: ID!
+	username: String!
+	password: String!
 	isAdmin: Boolean
 }
 
 type CompanyType {
-	id: ID
-	name: String
-	startDate: Date
-	finishDate: Date
+	id: ID!
+	name: String!
+	startDate: Date!
+	finishDate: Date!
 }
 
-input CatalogInput {
-	catalog: String
-	title: String
-	company: String
+type ImageType {
+	id: ID!
+	path: String!
+}
+
+type CatalogType {
+	id: ID!
+	name: String!
+	title: String!
+	company: CompanyType!
+	face: ImageType!
+	thumbnails: [ImageType]
+	originals: [ImageType]}
+
+input CompanyInput {
+	id: ID!
+	name: String!
 }

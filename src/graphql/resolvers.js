@@ -1,13 +1,14 @@
 import { Kind } from 'graphql/language'
 import { GraphQLUpload } from 'graphql-upload'
-import { uploadCatalog } from './resolvers/catalogs'
+import { uploadCatalog, catalogsList } from './resolvers/catalogs'
 import { user, login } from './resolvers/users'
 import { companiesList, addCompany, removeCompany } from './resolvers/companies'
 
 export default {
 	Query: {
 		user,
-		companiesList
+		companiesList,
+		catalogsList
 	},
 	Mutation: {
 		uploadCatalog,
