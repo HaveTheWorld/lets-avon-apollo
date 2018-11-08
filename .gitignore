@@ -1,6 +1,9 @@
 # dependencies
 node_modules
 
+#upload
+upload/catalogs/**/*
+
 # misc
 .env
 

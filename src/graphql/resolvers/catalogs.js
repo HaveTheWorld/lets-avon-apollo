@@ -1,12 +1,13 @@
 import sharp from 'sharp'
-import { promisify } from 'util'
 import fs, { createWriteStream } from 'fs'
+import Image from '../../models/image'
+import Company from '../../models/company'
+import Catalog from '../../models/catalog'
 
-import path from 'path'
-const CATALOGS_DIR = path.join(__dirname, '../../../upload/catalogs')
+const CATALOGS_DIR = 'upload/catalogs'
 
-
-const storeUpload = (catalogPath, originalsPath, thumbnailsPath, { stream, filename }) => {
+const storeUpload = (paths, index, { stream, filename }) => {
+	const { catalogPath, originalsPath, thumbnailsPath } = paths
 
 	const faceTransformer = sharp()
 		.resize({
@@ -22,37 +23,62 @@ const storeUpload = (catalogPath, originalsPath, thumbnailsPath, { stream, filen
 		})
 	
 	return Promise.all([
+		// Face
 		new Promise((resolve, reject) => {
-			if (filename.split('.').shift() !== '1') {
-				return resolve()
-			}
+			if (index) { return resolve() }
 
 			const mime = filename.split('.').pop()
-			
+			const path = `${catalogPath}/face.${mime}`
+
 			stream.pipe(faceTransformer)
-				.pipe(createWriteStream(path.join(catalogPath, `face.${mime}`)))
-				.on('finish', () => resolve())
+				.pipe(createWriteStream(path))
+				.on('finish', async () => {
+					const image = await Image.create({ path })
+					resolve(image._id)
+				})
 				.on('error', reject)
 		}),
+		// Original
 		new Promise((resolve, reject) => {
-			stream.pipe(createWriteStream(path.join(originalsPath, filename)))
-				.on('finish', () => resolve())
+			const path = `${originalsPath}/${filename}`
+
+			stream.pipe(createWriteStream(path))
+				.on('finish', async () => {
+					const image = await Image.create({ path })
+					resolve(image._id)
+				})
 				.on('error', reject)
 		}),
+		// Thumbnail
 		new Promise((resolve, reject) => {
+			const path = `${thumbnailsPath}/${filename}`
+
 			stream.pipe(thumbnailTransformer)
-				.pipe(createWriteStream(path.join(thumbnailsPath, filename)))
-				.on('finish', () => resolve())
+				.pipe(createWriteStream(path))
+				.on('finish', async () => {
+					const image = await Image.create({ path })
+					resolve(image._id)
+				})
 				.on('error', reject)
 		})
 	])
 }
 
 export const uploadCatalog = async (parent, { fields, files }) => {
-	const { catalog, title, company } = fields
-	const catalogPath = path.join(CATALOGS_DIR, `${catalog}-${company}`)
-	const originalsPath = path.join(catalogPath, 'originals')
-	const thumbnailsPath = path.join(catalogPath, 'thumbnails')
+	let { catalog, title, company } = fields
+	
+	if (!catalog || !title || !company) { throw new Error('Не все поля заполнены корректно.') }
+
+	const { _id: companyId } = await Company.findOne({ name: company })
+	const existedCatalog = await Catalog.findOne({ name: catalog, company: companyId })
+	
+	if (existedCatalog) { throw new Error('В этой кампании уже есть такой каталог.') }
+
+	catalog = catalog.trim().toLowerCase()
+
+	const catalogPath = `${CATALOGS_DIR}/${catalog}-${company}`
+	const originalsPath = `${catalogPath}/originals`
+	const thumbnailsPath = `${catalogPath}/thumbnails`
 
 	if (!fs.existsSync(CATALOGS_DIR)) { fs.mkdirSync(CATALOGS_DIR) }
 	if (!fs.existsSync(catalogPath)) {
@@ -60,7 +86,28 @@ export const uploadCatalog = async (parent, { fields, files }) => {
 		fs.mkdirSync(originalsPath)
 		fs.mkdirSync(thumbnailsPath)
 	}
+	
+	const paths = { catalogPath, originalsPath, thumbnailsPath }
 
-	await Promise.all(files.map(async file => storeUpload(catalogPath, originalsPath, thumbnailsPath, await file)))
+	const images = await Promise.all(
+		files.map(async (file, index) => {
+			return storeUpload(paths, index, await file)
+		})
+	)
+
+	const sortedImages = images.reduce((acc, [face, orig, thumb], index) => {
+		if (!index) { acc['face'] = face }
+		acc.originals.push(orig)
+		acc.thumbnails.push(thumb)
+		return acc
+	}, { face: '', originals: [], thumbnails: [] })	
+
+	await Catalog.create({
+		name: catalog,
+		title: title.trim().replace(/^[а-я]/, l => l.toUpperCase()),
+		company: companyId,
+		images: sortedImages
+	})
+
 	return true
 }
