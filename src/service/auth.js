@@ -11,7 +11,6 @@ function getTokenFromBearer(req) {
 }
 
 export const putUserToReq = async (req, res, next) => {
-	console.log(req.headers)
 	const token = getTokenFromBearer(req)
 	if (!token) { return next() }
 
