@@ -21,7 +21,7 @@ export function makeCatalogDirs(catalog, company) {
 export async function storeCatalogImage ({ dir, isFace, isThumb, stream, filename }) {	
 	if (isFace) {
 		const faceTransformer = sharp()
-			.resize({ width: 850, height: 1120, fit: 'cover', position: 'right top'	})
+			.resize({ width: 350, height: 461, fit: 'cover', position: 'right top'	})
 		const mime = filename.split('.').pop()
 		filename = `face.${mime}`
 		stream = stream.pipe(faceTransformer)

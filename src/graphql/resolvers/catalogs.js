@@ -4,8 +4,16 @@ import Company from '../../models/Company'
 import Catalog from '../../models/Catalog'
 
 // Queries
-export const getAllCatalogs = () => {
-	return Catalog.find().populate('face').populate('company')
+export const getAllCatalogs = async (parent, { current }) => {
+	let find = {}
+
+	if (current) {
+		const date = Date.now()
+		const currentCompany = await Company.findOne({ startDate: { $lte: date }, finishDate: { $gt: date } })
+		find = { company: currentCompany._id }
+	}
+
+	return Catalog.find(find)
 }
 
 // Mutations

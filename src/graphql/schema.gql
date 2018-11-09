@@ -3,7 +3,7 @@ scalar Date
 type Query {
 	getCurrentUser: UserType
 	getAllCompanies: [CompanyType]
-	getAllCatalogs: [CatalogType]
+	getAllCatalogs(current: Boolean): [CatalogType]
 }
 
 type Mutation {
