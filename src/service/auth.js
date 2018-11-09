@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import User from '../models/user'
+import User from '../models/User'
 import { JWT_SECRET } from './config'
 
 function getTokenFromBearer(req) {
@@ -10,7 +10,7 @@ function getTokenFromBearer(req) {
 	return token || null
 }
 
-export const getUserFromBearer = async (req, res, next) => {
+export const putUserToReq = async (req, res, next) => {
 	const token = getTokenFromBearer(req)
 	if (!token) { return next() }
 

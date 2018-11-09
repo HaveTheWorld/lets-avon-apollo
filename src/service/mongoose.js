@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import User from '../models/user'
+import User from '../models/User'
 import { MONGO_URL, ADMIN_USERNAME, ADMIN_PASSWORD } from './config'
 
 const params = {
