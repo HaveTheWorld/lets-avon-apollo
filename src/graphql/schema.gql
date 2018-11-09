@@ -11,7 +11,8 @@ type Mutation {
 	addCompany(name: String!, startDate: Date!, finishDate: Date!): CompanyType
 	removeCompany(id: ID!): Boolean
 	uploadCatalogImage(catalog: String!, company: CompanyInput!, file: Upload!, withFace: Boolean): UploadedCatalogImageType
-	addCatalog(catalog: String!, title: String!, company: CompanyInput!, images: CatalogImagesInput!): Boolean
+	addCatalog(catalog: String!, title: String!, company: CompanyInput!, images: CatalogImagesInput!): CatalogType
+	removeCatalog(id: ID!): Boolean
 }
 
 type UserType {

@@ -13,6 +13,8 @@ app.use(helmet())
 app.use(bodyParser.json())
 
 app.use(putUserToReq)
+import path from 'path'
 initApollo(app)
+app.use('/upload', express.static(path.join(__dirname, '../upload')))
 
 export default app

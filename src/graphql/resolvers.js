@@ -3,7 +3,7 @@ import { GraphQLUpload } from 'graphql-upload'
 import { getCurrentUser, login } from './resolvers/auth'
 import { getAllCompanies, addCompany, removeCompany } from './resolvers/companies'
 import { uploadCatalogImage } from './resolvers/images'
-import { getAllCatalogs, addCatalog } from './resolvers/catalogs'
+import { getAllCatalogs, addCatalog, removeCatalog } from './resolvers/catalogs'
 
 export default {
 	Query: {
@@ -13,10 +13,11 @@ export default {
 	},
 	Mutation: {
 		login,
-		addCatalog,
 		addCompany,
 		removeCompany,
-		uploadCatalogImage
+		uploadCatalogImage,
+		addCatalog,
+		removeCatalog
 	},
 	Upload: GraphQLUpload,
 	Date: {
