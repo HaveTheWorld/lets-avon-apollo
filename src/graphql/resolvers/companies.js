@@ -1,7 +1,7 @@
-import Company from '../../models/company'
+import Company from '../../models/Company'
 
 // Queries
-export const companiesList = () => {
+export const getAllCompanies = () => {
 	return Company.find()
 }
 

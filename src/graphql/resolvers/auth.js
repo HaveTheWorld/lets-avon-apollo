@@ -1,9 +1,9 @@
-import User from '../../models/user'
+import User from '../../models/User'
 import jwt from 'jsonwebtoken'
 import { JWT_SECRET, JWT_EXPIRE } from '../../service/config'
 
 // Queries
-export const user = (parent, args, { req }) => {
+export const getCurrentUser = (parent, args, { req }) => {
 	return req.user
 }
 
