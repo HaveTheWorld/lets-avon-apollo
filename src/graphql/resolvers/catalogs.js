@@ -1,15 +1,28 @@
 import del from 'del'
-import Image from '../../models/Image'
-import Company from '../../models/Company'
-import Catalog from '../../models/Catalog'
 
 // Queries
-export const getAllCatalogs = () => {
-	return Catalog.find().populate('face').populate('company')
+export const getAllCatalogs = async (parent, { current }, { Company, Catalog }) => {
+	let find = {}
+
+	if (current) {
+		const date = Date.now()
+		const currentCompany = await Company.findOne({ startDate: { $lte: date }, finishDate: { $gt: date } })
+		find = { company: currentCompany._id }
+	}
+
+	return Catalog.find(find)
+}
+
+export const getCatalog = async (parent, { company, name }, { Company, Catalog }) => {
+	const existedCompany = await Company.findOne({ name: company })
+
+	if (!existedCompany) { throw new Error('Неверно указана кампания') }
+
+	return Catalog.findOne({ name, company: existedCompany._id }).populate('originals thumbnails')
 }
 
 // Mutations
-export const addCatalog = async (parent, { catalog, title, company, images }) => {
+export const addCatalog = async (parent, { catalog, title, company, images }, { Company, Catalog }) => {
 	catalog = catalog.trim().toLowerCase()
 
 	const [existedCompany, existedCatalog] = await Promise.all([
@@ -33,7 +46,7 @@ export const addCatalog = async (parent, { catalog, title, company, images }) =>
 	return newCatalog
 }
 
-export const removeCatalog = async (parent, { id }) => {
+export const removeCatalog = async (parent, { id }, { Catalog, Image }) => {
 	const catalog = await Catalog.findById(id).populate('face thumbnails originals').select('face thumbnails originals')
 
 	if (!catalog) { throw new Error('Невозможно найти такой каталог.') }

@@ -1,18 +1,19 @@
 import { Kind } from 'graphql/language'
 import { GraphQLUpload } from 'graphql-upload'
-import { getCurrentUser, login } from './resolvers/auth'
+import { getCurrentUser, loginUser } from './resolvers/auth'
 import { getAllCompanies, addCompany, removeCompany } from './resolvers/companies'
 import { uploadCatalogImage } from './resolvers/images'
-import { getAllCatalogs, addCatalog, removeCatalog } from './resolvers/catalogs'
+import { getAllCatalogs, getCatalog, addCatalog, removeCatalog } from './resolvers/catalogs'
 
 export default {
 	Query: {
 		getCurrentUser,
 		getAllCompanies,
-		getAllCatalogs
+		getAllCatalogs,
+		getCatalog
 	},
 	Mutation: {
-		login,
+		loginUser,
 		addCompany,
 		removeCompany,
 		uploadCatalogImage,

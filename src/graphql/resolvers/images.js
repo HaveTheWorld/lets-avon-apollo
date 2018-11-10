@@ -1,8 +1,7 @@
 import { makeCatalogDirs, storeCatalogImage } from '../../service/upload'
-import Catalog from '../../models/Catalog'
 
 //Mutations
-export const uploadCatalogImage = async (parent, { catalog, company, file, withFace }) => {
+export const uploadCatalogImage = async (parent, { catalog, company, file, withFace }, { Catalog }) => {
 	catalog = catalog.trim().toLowerCase()
 	
 	if (withFace) {
