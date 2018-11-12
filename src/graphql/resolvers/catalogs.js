@@ -7,10 +7,9 @@ export const getAllCatalogs = async (parent, { current }, { Company, Catalog }) 
 	if (current) {
 		const date = Date.now()
 		const currentCompany = await Company.findOne({ startDate: { $lte: date }, finishDate: { $gt: date } })
-		find = { company: currentCompany._id }
+		find = { company: currentCompany ? currentCompany._id : null }
 	}
-
-	return Catalog.find(find)
+	return Catalog.find(find).populate({ path: 'images', options: { limit: 1 } })
 }
 
 export const getCatalog = async (parent, { company, name }, { Company, Catalog }) => {
@@ -22,46 +21,46 @@ export const getCatalog = async (parent, { company, name }, { Company, Catalog }
 }
 
 // Mutations
-export const addCatalog = async (parent, { catalog, title, company, images }, { Company, Catalog }) => {
-	catalog = catalog.trim().toLowerCase()
-
-	const [existedCompany, existedCatalog] = await Promise.all([
-		Company.findById(company.id),
-		Catalog.findOne({ name: catalog, company: company.id })
+export const addCatalog = async (parent, { name, title, companyId, images }, { Company, Catalog, Image }) => {
+	let [company, catalog] = await Promise.all([
+		Company.findById(companyId),
+		Catalog.findOne({ name, company: companyId })
 	])
 
-	if (!existedCompany) { throw new Error('Неверно указана кампания.') }
-	if (existedCatalog) { throw new Error('В этой кампании уже есть такой каталог.') }
+	if (!company) { throw new Error('Неверно указана кампания.') }
+	if (catalog) { throw new Error('В этой кампании уже есть такой каталог.') }
 
-	const newCatalog = await Catalog.create({
-		name: catalog,
-		title: title.trim().replace(/^[a-zа-я]/, l => l.toUpperCase()),
-		company: company.id,
-		...images
-	})
-	
-	existedCompany.catalogs.push(newCatalog._id)
-	await existedCompany.save()
+	const [newCatalog, faceImage] = await Promise.all([
+		Catalog.create({ name, title, company: companyId, images }),
+		Image.findById(images[0])
+	])
+	company.catalogs.push(newCatalog._id)
+	await company.save()
+
+	newCatalog.set('company', company)
+	newCatalog.set('images', [faceImage])
 
 	return newCatalog
 }
 
-export const removeCatalog = async (parent, { id }, { Catalog, Image }) => {
-	const catalog = await Catalog.findById(id).populate('face thumbnails originals').select('face thumbnails originals')
+export const removeCatalog = async (parent, { catalogId, companyId }, { Catalog, Image, Company }) => {
+	const [catalog, company] = await Promise.all([
+		Catalog.findById(catalogId).populate('images').select('images'),
+		Company.findById(companyId)
+	])
 
-	if (!catalog) { throw new Error('Невозможно найти такой каталог.') }
+	if (!catalog) { throw new Error('Нет такого каталога.') }
+	if (!company) { throw new Error('Неверно указана кампания.') }
 
-	const catalogPath = catalog.face.path.split('/').slice(0, -1).join('/')	
-	const imagesIds = [
-		catalog.face._id,
-		...catalog.originals.map(({ _id }) => _id),
-		...catalog.thumbnails.map(({ _id }) => _id)
-	]
-
+	const catalogPath = catalog.images[0].path.split('/').slice(0, -1).join('/')	
+	const imagesIds = catalog.images.map(({ _id }) => _id)
+	company.set('catalogs', company.catalogs.filter(id => id != catalogId))
+	
 	await Promise.all([
 		del(catalogPath),
 		Image.deleteMany({ _id: { $in: imagesIds } }),
-		Catalog.deleteOne({ _id: id })
+		Catalog.deleteOne({ _id: catalogId }),
+		company.save()
 	])
 
 	return true

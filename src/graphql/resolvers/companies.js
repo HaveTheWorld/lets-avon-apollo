@@ -1,18 +1,16 @@
 // Queries
-export const getAllCompanies = () => {
+export const getAllCompanies = (parent, args, { Company }) => {
 	return Company.find()
 }
 
 // Mutations
-export const addCompany = async (parent, { name, startDate, finishDate }, { Company }) => {
-	if (!name || !startDate || !finishDate) { throw new Error('Не все поля заполнены корректно.') }
+export const addCompany = async (parent, { number, year, startDate, finishDate }, { Company }) => {
+	// const company = await Company.findOne({ number, year })
 
-	const company = await Company.findOne({ name })
-
-	if (company) { throw new Error('Такая кампания уже есть в базе данных.') }
+	// if (company) { throw new Error('Такая кампания уже есть в базе данных.') }
 	if (startDate >= finishDate) { throw new Error('Дата начала должна быть раньше даты конца кампании.') }
 
-	return Company.create({ name, startDate, finishDate })
+	return Company.create({ number, year, startDate, finishDate })
 }
 
 export const removeCompany = async (parent, { id }, { Company }) => {

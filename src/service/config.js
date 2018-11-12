@@ -16,4 +16,5 @@ export const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 export const JWT_SECRET = process.env.JWT_SECRET
 export const JWT_EXPIRE = IS_PROD ? process.env.JWT_EXPIRE : '365 days'
+export const UPLOAD_DIR = process.env.UPLOAD_DIR
 export const CATALOGS_DIR = process.env.CATALOGS_DIR

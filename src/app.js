@@ -7,6 +7,7 @@ import bodyParser from 'body-parser'
 import './service/mongoose'
 import initApollo from './service/apollo'
 import { authUserMiddleware } from './service/auth'
+import { UPLOAD_DIR, CATALOGS_DIR } from './service/config'
 
 const app = express()
 
@@ -17,6 +18,6 @@ app.use(bodyParser.json())
 
 app.use(authUserMiddleware)
 initApollo(app)
-app.use('/upload', express.static(path.join(__dirname, '../upload')))
+app.use(`/catalogs`, express.static(path.join(__dirname, '..', UPLOAD_DIR, CATALOGS_DIR)))
 
 export default app

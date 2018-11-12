@@ -1,31 +1,25 @@
 import { makeCatalogDirs, storeCatalogImage } from '../../service/upload'
 
 //Mutations
-export const uploadCatalogImage = async (parent, { catalog, company, file, withFace }, { Catalog }) => {
-	catalog = catalog.trim().toLowerCase()
-	
-	if (withFace) {
-		const existedCatalog = await Catalog.findOne({ name: catalog, company: company.id })
-		if (existedCatalog) { throw new Error('В этой кампании уже есть такой каталог.') }
+export const uploadCatalogImage = async (parent, { catalogName, companyId, companyName, file, index }, { Catalog, Image }) => {
+	if (!index) {
+		const catalog = await Catalog.findOne({ name: catalogName, company: companyId })
+		if (catalog) { throw new Error('В этой кампании уже есть такой каталог.') }
 	}
 
-	const { catalogDir, originalsDir, thumbnailsDir } = makeCatalogDirs(catalog, company.name)
+	const catalogDir = makeCatalogDirs(catalogName, companyName, index)
+	const [path, catalogFacePath, catalogThumbPath] = await storeCatalogImage(catalogDir, index, await file)
 
-	file = await file
+	let image = await Image.findOne({ path })
 
-	const uploads = [
-		storeCatalogImage({ dir: originalsDir, ...file }),
-		storeCatalogImage({ dir: thumbnailsDir, isThumb: true, ...file })
-	]
-	withFace && uploads.push(storeCatalogImage({ dir: catalogDir, isFace: true, ...file }))
+	if (image) {
+		image.set('catalogIndex', index)
+		image.set('catalogFacePath', catalogFacePath)
+		image.set('catalogThumbPath', catalogThumbPath)
+		image.save()
+	} else {
+		image = Image.create({ path, catalogIndex: index, catalogFacePath, catalogThumbPath })
+	}
 
-	const images = await Promise.all(uploads)
-
-	const sorted = images.reduce((acc, image, index) => {
-		const types = ['original', 'thumbnail', 'face']
-		acc[types[index]] = image
-		return acc
-	}, {})
-
-	return sorted
+	return image
 }

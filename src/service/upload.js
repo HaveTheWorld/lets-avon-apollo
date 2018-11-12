@@ -1,48 +1,54 @@
 import sharp from 'sharp'
-import fs, { createWriteStream } from 'fs'
-import Image from '../models/Image'
-import { CATALOGS_DIR } from './config'
+import fs from 'fs'
+import { UPLOAD_DIR, CATALOGS_DIR } from './config'
 
-export function makeCatalogDirs(catalog, company) {
-	const catalogDir = `${CATALOGS_DIR}/${catalog}-${company}`
-	const originalsDir = `${catalogDir}/originals`
-	const thumbnailsDir = `${catalogDir}/thumbnails`
+export function makeCatalogDirs(catalogName, companyName, index) {
+	const catalogDir = `${CATALOGS_DIR}/${catalogName}-${companyName}`
 
-	if (!fs.existsSync(CATALOGS_DIR)) { fs.mkdirSync(CATALOGS_DIR) }
-	if (!fs.existsSync(catalogDir)) {
-		fs.mkdirSync(catalogDir)
-		fs.mkdirSync(originalsDir)
-		fs.mkdirSync(thumbnailsDir)
-	}
+	!index && !fs.existsSync(`${UPLOAD_DIR}/${catalogDir}`) && fs.mkdirSync(`${UPLOAD_DIR}/${catalogDir}`)
 
-	return { catalogDir, originalsDir, thumbnailsDir }
+	return catalogDir
 }
 
-export async function storeCatalogImage ({ dir, isFace, isThumb, stream, filename }) {	
-	if (isFace) {
-		const faceTransformer = sharp()
-			.resize({ width: 350, height: 461, fit: 'cover', position: 'right top'	})
-		const mime = filename.split('.').pop()
-		filename = `face.${mime}`
-		stream = stream.pipe(faceTransformer)
-	}
-
-	if (isThumb) {
-		const thumbnailTransformer = sharp().resize({ width: 150 })
-		stream = stream.pipe(thumbnailTransformer)
-	}
-
-	const path = `${dir}/${filename}`
-
-	return new Promise((resolve, reject) => {
-		stream.pipe(createWriteStream(path))
-			.on('finish', async () => {
-				let image = await Image.findOne({ path })
-				if (!image) {
-					image = await Image.create({ path })					
-				}
-				resolve(image)
-			})
+export async function storeCatalogImage (dir, index, { stream, filename }) {
+	const original = new Promise((resolve, reject) => {
+		const path = `${dir}/${filename}`
+		stream.pipe(fs.createWriteStream(`${UPLOAD_DIR}/${path}`))
+			.on('finish', () => resolve(path))
 			.on('error', reject)
 	})
+
+	let imageItems = [original]
+
+	if (!index) {
+		const [name, mime] = filename.split('.')
+		const face = new Promise((resolve, reject) => {
+			filename = `${name}-catalog-face.${mime}`
+			const path = `${dir}/${filename}`
+
+			const transformer = sharp()
+				.resize({ width: 350, height: 461, fit: 'cover', position: 'right top'	})
+
+			stream.pipe(transformer)
+				.pipe(fs.createWriteStream(`${UPLOAD_DIR}/${path}`))
+				.on('finish', () => resolve(path))
+				.on('error', reject)
+		})
+
+		const thumb = new Promise((resolve, reject) => {
+			filename = `${name}-catalog-thumb.${mime}`
+			const path = `${dir}/${filename}`
+
+			const transformer = sharp()
+				.resize({ width: 75, height: 98, fit: 'cover', position: 'right top'	})
+
+			stream.pipe(transformer)
+				.pipe(fs.createWriteStream(`${UPLOAD_DIR}/${path}`))
+				.on('finish', () => resolve(path))
+				.on('error', reject)
+		})
+		imageItems = [...imageItems, face, thumb]
+	}
+
+	return Promise.all(imageItems)	
 }
