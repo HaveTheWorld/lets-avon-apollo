@@ -1,4 +1,5 @@
 import del from 'del'
+import { UPLOAD_DIR } from '../../service/config'
 
 // Queries
 export const getAllCatalogs = async (parent, { current }, { Company, Catalog }) => {
@@ -57,7 +58,7 @@ export const removeCatalog = async (parent, { catalogId, companyId }, { Catalog,
 	company.set('catalogs', company.catalogs.filter(id => id != catalogId))
 	
 	await Promise.all([
-		del(catalogPath),
+		del(`${UPLOAD_DIR}/${catalogPath}`),
 		Image.deleteMany({ _id: { $in: imagesIds } }),
 		Catalog.deleteOne({ _id: catalogId }),
 		company.save()

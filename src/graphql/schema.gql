@@ -11,7 +11,7 @@ type Mutation {
 	loginUser(username: String!, password: String!): TokenType
 	addCompany(number: Int!, year: Int!, startDate: Date!, finishDate: Date!): CompanyType
 	removeCompany(id: ID!): Boolean
-	uploadCatalogImage(catalogName: String!, companyId: ID!, companyName: String!, file: Upload!, index: Int!): ImageType
+	uploadCatalogImage(catalogName: String!, companyId: ID!, companyName: String!, file: Upload!, index: Int!, length: Int!): [ImageType]
 	addCatalog(name: String!, title: String!, companyId: ID!, images: [ID]!): CatalogType
 	removeCatalog(catalogId: ID!, companyId: ID!): Boolean
 }
