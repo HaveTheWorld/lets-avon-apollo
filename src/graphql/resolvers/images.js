@@ -1,4 +1,4 @@
-import { makeCatalogDir, splitCatalogImage, makeCatalogImageItem } from '../../service/upload'
+import { makeCatalogDir, splitCatalogImage, makeCatalogImageItem, renameImage } from '../../service/upload'
 
 import sharp from 'sharp'
 
@@ -37,7 +37,7 @@ export const uploadCatalogImage = async (parent, args, { Catalog, Image }) => {
 }
 
 async function createImage(Image, path, face, thumb) {
-	const index = +path.split('/').pop().split('.')[0] - 1
+	const index = +path.split('/').pop().split('.')[0]
 	let image = await Image.findOne({ path })
 
 	if (image) {

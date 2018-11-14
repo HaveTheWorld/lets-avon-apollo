@@ -1,5 +1,6 @@
 import sharp from 'sharp'
 import fs from 'fs'
+import del from 'del'
 import { UPLOAD_DIR, CATALOGS_DIR } from './config'
 
 export function makeCatalogDir(catalogName, companyName, index) {
@@ -8,6 +9,11 @@ export function makeCatalogDir(catalogName, companyName, index) {
 	!index && !fs.existsSync(`${UPLOAD_DIR}/${catalogDir}`) && fs.mkdirSync(`${UPLOAD_DIR}/${catalogDir}`)
 
 	return catalogDir
+}
+
+export function removeCatalogDir(someImagePath) {
+	const catalogDir = someImagePath.split('/').slice(0, -1).join('/')
+	return del(`${UPLOAD_DIR}/${catalogDir}`)
 }
 
 export async function splitCatalogImage (dir, mime, index, length, fileStream) {
@@ -68,5 +74,13 @@ export function makeCatalogImageItem(dir, name, mime, item, fileStream) {
 			.pipe(fs.createWriteStream(`${UPLOAD_DIR}/${path}`))
 			.on('finish', () => resolve(path))
 			.on('error', reject)
+	})
+}
+
+export function renameImage(oldPath, newPath) {
+	return new Promise((resolve, reject) => {
+		fs.rename(`${UPLOAD_DIR}/${oldPath}`, `${UPLOAD_DIR}/${newPath}`, err => {
+			err ? reject() : resolve()
+		})
 	})
 }

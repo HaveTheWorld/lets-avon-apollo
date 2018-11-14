@@ -4,7 +4,7 @@ type Query {
 	getCurrentUser: UserType
 	getAllCompanies: [CompanyType]
 	getAllCatalogs(current: Boolean): [CatalogType]
-	getCatalog(company: String!, name: String!): CatalogType
+	getCatalog(number: String!, year: String!, name: String!): CatalogType
 }
 
 type Mutation {
@@ -12,7 +12,7 @@ type Mutation {
 	addCompany(number: Int!, year: Int!, startDate: Date!, finishDate: Date!): CompanyType
 	removeCompany(id: ID!): Boolean
 	uploadCatalogImage(catalogName: String!, companyId: ID!, companyName: String!, file: Upload!, index: Int!, length: Int!): [ImageType]
-	addCatalog(name: String!, title: String!, companyId: ID!, images: [ID]!): CatalogType
+	addCatalog(name: String!, title: String!, companyId: ID!, imagesIds: [ID]!): CatalogType
 	removeCatalog(catalogId: ID!, companyId: ID!): Boolean
 }
 
@@ -49,5 +49,6 @@ type CatalogType {
 	name: String!
 	title: String!
 	company: CompanyType!
+	count: Int!
 	images: [ImageType!]!
 }
