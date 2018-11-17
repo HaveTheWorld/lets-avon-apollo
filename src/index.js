@@ -1,6 +1,6 @@
-import app from './app'
-import fs from 'fs'
-import { HOST, PORT, ENDPOINT_PATH, UPLOAD_DIR, CATALOGS_DIR } from './service/config'
+const app = require('./app')
+const fs = require('fs')
+const { HOST, PORT, ENDPOINT_PATH, UPLOAD_DIR, CATALOGS_DIR } = require('./service/config')
 
 !fs.existsSync(UPLOAD_DIR) && fs.mkdirSync(UPLOAD_DIR)
 !fs.existsSync(`${UPLOAD_DIR}/${CATALOGS_DIR}`) && fs.mkdirSync(`${UPLOAD_DIR}/${CATALOGS_DIR}`)

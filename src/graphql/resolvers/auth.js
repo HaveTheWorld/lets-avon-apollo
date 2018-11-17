@@ -1,13 +1,13 @@
-import jwt from 'jsonwebtoken'
-import { JWT_SECRET, JWT_EXPIRE } from '../../service/config'
+const jwt = require('jsonwebtoken')
+const { JWT_SECRET, JWT_EXPIRE } = require('../../service/config')
 
 // Queries
-export const getCurrentUser = (parent, args, { currentUser }) => {
+exports.getCurrentUser = (parent, args, { currentUser }) => {
 	return currentUser
 }
 
 // Mutations
-export const loginUser = async (parent, { username, password }, { User }) => {
+exports.loginUser = async (parent, { username, password }, { User }) => {
 	if (!username || !password) { throw new Error('Не все поля заполнены корректно.') }
 
 	const user = await User.findOne({ username })	

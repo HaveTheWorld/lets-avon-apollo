@@ -6,6 +6,6 @@ const ImageSchema = new Schema({
 	catalogThumbPath: { type: String },
 	catalogFacePath: { type: String },
 	catalogIndex: { type: Number }
-})
+}, { versionKey: false })
 
 module.exports = mongoose.model('Image', ImageSchema)

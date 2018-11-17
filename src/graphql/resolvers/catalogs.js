@@ -1,7 +1,7 @@
-import { removeCatalogDir } from '../../service/upload'
+const { removeCatalogDir } = require('../../service/upload')
 
 // Queries
-export const getAllCatalogs = async (parent, { current }, { Company, Catalog }) => {
+exports.getAllCatalogs = async (parent, { current }, { Company, Catalog }) => {
 	let find = {}
 
 	if (current) {
@@ -12,7 +12,7 @@ export const getAllCatalogs = async (parent, { current }, { Company, Catalog }) 
 	return Catalog.find(find).populate({ path: 'images', options: { limit: 1 } })
 }
 
-export const getCatalog = async (parent, { number, year, name }, { Company, Catalog }) => {
+exports.getCatalog = async (parent, { number, year, name }, { Company, Catalog }) => {
 	const company = await Company.findOne({ number, year })
 	if (!company) { throw new Error('Неверно указана кампания') }
 
@@ -21,7 +21,7 @@ export const getCatalog = async (parent, { number, year, name }, { Company, Cata
 }
 
 // Mutations
-export const addCatalog = async (parent, { name, title, companyId, imagesIds }, { Company, Catalog, Image }) => {
+exports.addCatalog = async (parent, { name, title, companyId, imagesIds }, { Company, Catalog, Image }) => {
 	let [company, catalog, firstImage] = await Promise.all([
 		Company.findById(companyId),
 		Catalog.findOne({ name, company: companyId }),
@@ -50,7 +50,7 @@ export const addCatalog = async (parent, { name, title, companyId, imagesIds }, 
 	return catalog
 }
 
-export const removeCatalog = async (parent, { catalogId, companyId }, { Catalog, Image, Company }) => {
+exports.removeCatalog = async (parent, { catalogId, companyId }, { Catalog, Image, Company }) => {
 	const [catalog, company] = await Promise.all([
 		Catalog.findById(catalogId).populate('images').select('images'),
 		Company.findById(companyId)

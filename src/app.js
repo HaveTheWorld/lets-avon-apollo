@@ -1,13 +1,13 @@
-import path from 'path'
-import express from 'express'
-import logger from 'morgan'
-import cors from 'cors'
-import helmet from 'helmet'
-import bodyParser from 'body-parser'
-import './service/mongoose'
-import initApollo from './service/apollo'
-import { authUserMiddleware } from './service/auth'
-import { UPLOAD_DIR, CATALOGS_DIR } from './service/config'
+const path = require('path')
+const express = require('express')
+const logger = require('morgan')
+const cors = require('cors')
+const helmet = require('helmet')
+const bodyParser = require('body-parser')
+require('./service/mongoose')
+const initApollo = require('./service/apollo')
+const { authUserMiddleware } = require('./service/auth')
+const { UPLOAD_DIR, CATALOGS_DIR } = require('./service/config')
 
 const app = express()
 
@@ -20,4 +20,4 @@ app.use(authUserMiddleware)
 initApollo(app)
 app.use(`/catalogs`, express.static(path.join(__dirname, '..', UPLOAD_DIR, CATALOGS_DIR)))
 
-export default app
+module.exports = app

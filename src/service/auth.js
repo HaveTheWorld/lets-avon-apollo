@@ -1,6 +1,6 @@
-import jwt from 'jsonwebtoken'
-import User from '../models/User'
-import { JWT_SECRET } from './config'
+const jwt = require('jsonwebtoken')
+const User = require('../models/User')
+const { JWT_SECRET } = require('./config')
 
 function getTokenFromHeader(req) {
 	const authHeader = req.headers['authorization']
@@ -10,7 +10,7 @@ function getTokenFromHeader(req) {
 	return token || null
 }
 
-export const authUserMiddleware = async (req, res, next) => {
+exports.authUserMiddleware = async (req, res, next) => {
 	const token = getTokenFromHeader(req)
 	if (!token) { return next() }
 

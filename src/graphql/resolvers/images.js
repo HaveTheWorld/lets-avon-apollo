@@ -1,9 +1,7 @@
-import { makeCatalogDir, splitCatalogImage, makeCatalogImageItem, renameImage } from '../../service/upload'
-
-import sharp from 'sharp'
+const { makeCatalogDir, splitCatalogImage, makeCatalogImageItem, renameImage } = require('../../service/upload')
 
 //Mutations
-export const uploadCatalogImage = async (parent, args, { Catalog, Image }) => {
+exports.uploadCatalogImage = async (parent, args, { Catalog, Image }) => {
 	const { catalogName, companyId, companyName, file, index, length } = args
 
 	if (!index) {

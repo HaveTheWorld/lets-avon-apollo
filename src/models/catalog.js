@@ -10,7 +10,7 @@ const CatalogSchema = new Schema({
 	images: [
 		{ type: Schema.Types.ObjectId, ref: 'Image', required: true }
 	]
-})
+}, { versionKey: false })
 
 CatalogSchema.plugin(autoPopulate)
 

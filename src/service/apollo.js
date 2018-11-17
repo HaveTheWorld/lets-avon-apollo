@@ -1,16 +1,17 @@
-import { ApolloServer } from 'apollo-server-express'
-import schema from '../graphql/schema.gql'
-import resolvers from '../graphql/resolvers'
-import { IS_DEV, ENDPOINT_PATH } from '../service/config'
+const { ApolloServer } = require('apollo-server-express')
+const fs = require('fs')
+const typeDefs = fs.readFileSync('src/graphql/schema.gql', { encoding: 'utf-8' })
+const resolvers = require('../graphql/resolvers')
+const { IS_DEV, ENDPOINT_PATH } = require('../service/config')
 
-import User from '../models/User'
-import Company from '../models/Company'
-import Catalog from '../models/Catalog'
-import Image from '../models/Image'
+const User = require('../models/User')
+const Company = require('../models/Company')
+const Catalog = require('../models/Catalog')
+const Image = require('../models/Image')
 
-export default app => {
+module.exports = app => {
 	const server = new ApolloServer({
-		typeDefs: schema,
+		typeDefs,
 		resolvers,
 		context: ({ req }) => ({
 			currentUser: req.currentUser,

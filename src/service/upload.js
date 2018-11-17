@@ -1,9 +1,9 @@
-import sharp from 'sharp'
-import fs from 'fs'
-import del from 'del'
-import { UPLOAD_DIR, CATALOGS_DIR } from './config'
+const sharp = require('sharp')
+const fs = require('fs')
+const del = require('del')
+const { UPLOAD_DIR, CATALOGS_DIR } = require('./config')
 
-export function makeCatalogDir(catalogName, companyName, index) {
+exports.makeCatalogDir = (catalogName, companyName, index) => {
 	const catalogDir = `${CATALOGS_DIR}/${catalogName}-${companyName}`
 
 	!index && !fs.existsSync(`${UPLOAD_DIR}/${catalogDir}`) && fs.mkdirSync(`${UPLOAD_DIR}/${catalogDir}`)
@@ -11,12 +11,12 @@ export function makeCatalogDir(catalogName, companyName, index) {
 	return catalogDir
 }
 
-export function removeCatalogDir(someImagePath) {
+exports.removeCatalogDir = (someImagePath) => {
 	const catalogDir = someImagePath.split('/').slice(0, -1).join('/')
 	return del(`${UPLOAD_DIR}/${catalogDir}`)
 }
 
-export async function splitCatalogImage (dir, mime, index, length, fileStream) {
+exports.splitCatalogImage = async (dir, mime, index, length, fileStream) => {
 	const writableStream = sharp()
 	fileStream.pipe(writableStream)
 
@@ -57,7 +57,7 @@ function storeSplittedImage(writableStream, path, resizeParams) {
 	})
 }
 
-export function makeCatalogImageItem(dir, name, mime, item, fileStream) {
+exports.makeCatalogImageItem = (dir, name, mime, item, fileStream) => {
 	return new Promise((resolve, reject) => {
 		const filename = `${name}-${item}.${mime}`
 		const path = `${dir}/${filename}`
@@ -77,7 +77,7 @@ export function makeCatalogImageItem(dir, name, mime, item, fileStream) {
 	})
 }
 
-export function renameImage(oldPath, newPath) {
+exports.renameImage = (oldPath, newPath) => {
 	return new Promise((resolve, reject) => {
 		fs.rename(`${UPLOAD_DIR}/${oldPath}`, `${UPLOAD_DIR}/${newPath}`, err => {
 			err ? reject() : resolve()

@@ -1,10 +1,10 @@
 // Queries
-export const getAllCompanies = (parent, args, { Company }) => {
+exports.getAllCompanies = (parent, args, { Company }) => {
 	return Company.find()
 }
 
 // Mutations
-export const addCompany = async (parent, { number, year, startDate, finishDate }, { Company }) => {
+exports.addCompany = async (parent, { number, year, startDate, finishDate }, { Company }) => {
 	// const company = await Company.findOne({ number, year })
 
 	// if (company) { throw new Error('Такая кампания уже есть в базе данных.') }
@@ -13,7 +13,7 @@ export const addCompany = async (parent, { number, year, startDate, finishDate }
 	return Company.create({ number, year, startDate, finishDate })
 }
 
-export const removeCompany = async (parent, { id }, { Company }) => {
+exports.removeCompany = async (parent, { id }, { Company }) => {
 	if (!id) { throw new Error('Некорректно передан идентификатор.') }
 
 	await Company.deleteOne({ _id: id })

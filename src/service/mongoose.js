@@ -1,6 +1,6 @@
-import mongoose from 'mongoose'
-import User from '../models/User'
-import { MONGO_URL, ADMIN_USERNAME, ADMIN_PASSWORD } from './config'
+const mongoose = require('mongoose')
+const User = require('../models/User')
+const { MONGO_URL, ADMIN_USERNAME, ADMIN_PASSWORD } = require('./config')
 
 const params = {
 	useNewUrlParser: true,

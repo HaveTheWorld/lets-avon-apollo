@@ -1,11 +1,11 @@
-import { Kind } from 'graphql/language'
-import { GraphQLUpload } from 'graphql-upload'
-import { getCurrentUser, loginUser } from './resolvers/auth'
-import { getAllCompanies, addCompany, removeCompany } from './resolvers/companies'
-import { uploadCatalogImage } from './resolvers/images'
-import { getAllCatalogs, getCatalog, addCatalog, removeCatalog } from './resolvers/catalogs'
+const { Kind } = require('graphql/language')
+const { GraphQLUpload } = require('graphql-upload')
+const { getCurrentUser, loginUser } = require('./resolvers/auth')
+const { getAllCompanies, addCompany, removeCompany } = require('./resolvers/companies')
+const { uploadCatalogImage } = require('./resolvers/images')
+const { getAllCatalogs, getCatalog, addCatalog, removeCatalog } = require('./resolvers/catalogs')
 
-export default {
+module.exports = {
 	Query: {
 		getCurrentUser,
 		getAllCompanies,
