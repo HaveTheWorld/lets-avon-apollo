@@ -1,4 +1,4 @@
-import del from 'del'
+import { removeCatalogDir } from '../../service/upload'
 
 // Queries
 export const getAllCatalogs = async (parent, { current }, { Company, Catalog }) => {
@@ -7,61 +7,66 @@ export const getAllCatalogs = async (parent, { current }, { Company, Catalog }) 
 	if (current) {
 		const date = Date.now()
 		const currentCompany = await Company.findOne({ startDate: { $lte: date }, finishDate: { $gt: date } })
-		find = { company: currentCompany._id }
+		find = { company: currentCompany ? currentCompany._id : null }
 	}
-
-	return Catalog.find(find)
+	return Catalog.find(find).populate({ path: 'images', options: { limit: 1 } })
 }
 
-export const getCatalog = async (parent, { company, name }, { Company, Catalog }) => {
-	const existedCompany = await Company.findOne({ name: company })
+export const getCatalog = async (parent, { number, year, name }, { Company, Catalog }) => {
+	const company = await Company.findOne({ number, year })
+	if (!company) { throw new Error('Неверно указана кампания') }
 
-	if (!existedCompany) { throw new Error('Неверно указана кампания') }
-
-	return Catalog.findOne({ name, company: existedCompany._id }).populate('originals thumbnails')
+	return Catalog.findOne({ name, company: company._id })
+		.populate({ path: 'images', options: { sort: { catalogIndex: 1 } } })
 }
 
 // Mutations
-export const addCatalog = async (parent, { catalog, title, company, images }, { Company, Catalog }) => {
-	catalog = catalog.trim().toLowerCase()
-
-	const [existedCompany, existedCatalog] = await Promise.all([
-		Company.findById(company.id),
-		Catalog.findOne({ name: catalog, company: company.id })
+export const addCatalog = async (parent, { name, title, companyId, imagesIds }, { Company, Catalog, Image }) => {
+	let [company, catalog, firstImage] = await Promise.all([
+		Company.findById(companyId),
+		Catalog.findOne({ name, company: companyId }),
+		Image.findById(imagesIds[0])
 	])
 
-	if (!existedCompany) { throw new Error('Неверно указана кампания.') }
-	if (existedCatalog) { throw new Error('В этой кампании уже есть такой каталог.') }
+	if (!company) { throw new Error('Неверно указана кампания.') }
+	if (catalog) { throw new Error('В этой кампании уже есть такой каталог.') }
 
-	const newCatalog = await Catalog.create({
-		name: catalog,
-		title: title.trim().replace(/^[a-zа-я]/, l => l.toUpperCase()),
-		company: company.id,
-		...images
-	})
-	
-	existedCompany.catalogs.push(newCatalog._id)
-	await existedCompany.save()
+	if (imagesIds.length % 2 !== 0) {
+		await Promise.all([
+			removeCatalogDir(firstImage.path),
+			Image.deleteMany({ _id: { $in: imagesIds } })
+		])
+		throw new Error('Нечётное количество страниц. Картинки не загружены.')
+	}
 
-	return newCatalog
+	catalog = await Catalog.create({ name, title, company: companyId, count: imagesIds.length, images: imagesIds })
+
+	company.catalogs.push(catalog._id)
+	await company.save()
+
+	catalog.set('company', company)
+	catalog.set('images', [firstImage])
+
+	return catalog
 }
 
-export const removeCatalog = async (parent, { id }, { Catalog, Image }) => {
-	const catalog = await Catalog.findById(id).populate('face thumbnails originals').select('face thumbnails originals')
+export const removeCatalog = async (parent, { catalogId, companyId }, { Catalog, Image, Company }) => {
+	const [catalog, company] = await Promise.all([
+		Catalog.findById(catalogId).populate('images').select('images'),
+		Company.findById(companyId)
+	])
 
-	if (!catalog) { throw new Error('Невозможно найти такой каталог.') }
+	if (!catalog) { throw new Error('Нет такого каталога.') }
+	if (!company) { throw new Error('Неверно указана кампания.') }
 
-	const catalogPath = catalog.face.path.split('/').slice(0, -1).join('/')	
-	const imagesIds = [
-		catalog.face._id,
-		...catalog.originals.map(({ _id }) => _id),
-		...catalog.thumbnails.map(({ _id }) => _id)
-	]
-
+	const imagesIds = catalog.images.map(({ _id }) => _id)
+	company.set('catalogs', company.catalogs.filter(id => id != catalogId))
+	
 	await Promise.all([
-		del(catalogPath),
+		removeCatalogDir(catalog.images[0].path),
 		Image.deleteMany({ _id: { $in: imagesIds } }),
-		Catalog.deleteOne({ _id: id })
+		Catalog.deleteOne({ _id: catalogId }),
+		company.save()
 	])
 
 	return true

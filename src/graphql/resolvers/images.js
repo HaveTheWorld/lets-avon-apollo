@@ -1,31 +1,58 @@
-import { makeCatalogDirs, storeCatalogImage } from '../../service/upload'
+import { makeCatalogDir, splitCatalogImage, makeCatalogImageItem, renameImage } from '../../service/upload'
+
+import sharp from 'sharp'
 
 //Mutations
-export const uploadCatalogImage = async (parent, { catalog, company, file, withFace }, { Catalog }) => {
-	catalog = catalog.trim().toLowerCase()
-	
-	if (withFace) {
-		const existedCatalog = await Catalog.findOne({ name: catalog, company: company.id })
-		if (existedCatalog) { throw new Error('В этой кампании уже есть такой каталог.') }
+export const uploadCatalogImage = async (parent, args, { Catalog, Image }) => {
+	const { catalogName, companyId, companyName, file, index, length } = args
+
+	if (!index) {
+		const catalog = await Catalog.findOne({ name: catalogName, company: companyId })
+		if (catalog) { throw new Error('В этой кампании уже есть такой каталог.') }
 	}
 
-	const { catalogDir, originalsDir, thumbnailsDir } = makeCatalogDirs(catalog, company.name)
+	const { stream, filename } = await file
+	const [name, mime] = filename.split('.')
 
-	file = await file
+	const dir = makeCatalogDir(catalogName, companyName, index)
 
-	const uploads = [
-		storeCatalogImage({ dir: originalsDir, ...file }),
-		storeCatalogImage({ dir: thumbnailsDir, isThumb: true, ...file })
-	]
-	withFace && uploads.push(storeCatalogImage({ dir: catalogDir, isFace: true, ...file }))
+	let tasks = [splitCatalogImage(dir, mime, index, length, stream)]
+	if (!index) {
+		tasks = tasks.concat(
+			Promise.all([
+				makeCatalogImageItem(dir, '1', mime, 'face', stream),
+				makeCatalogImageItem(dir, '1', mime, 'thumb', stream)
+			])
+		)
+	}
 
-	const images = await Promise.all(uploads)
+	const result = await Promise.all(tasks)
+	const [left, right] = result[0].sort((a, b) => a === b ? 0 : a > b)
+	const [face, thumb] = result[1] ? result[1] : []
 
-	const sorted = images.reduce((acc, image, index) => {
-		const types = ['original', 'thumbnail', 'face']
-		acc[types[index]] = image
-		return acc
-	}, {})
+	const images = [createImage(Image, left, face, thumb)]
+	right && images.push(createImage(Image, right))
 
-	return sorted
+	return Promise.all(images)
+}
+
+async function createImage(Image, path, face, thumb) {
+	const index = +path.split('/').pop().split('.')[0]
+	let image = await Image.findOne({ path })
+
+	if (image) {
+		image.set('catalogIndex', index)
+		image.set('catalogFacePath', face)
+		image.set('catalogThumbPath', thumb)
+		image.save()
+	} else {
+		image = Image.create({
+			path,
+			catalogIndex: index,
+			catalogFacePath: face,
+			catalogThumbPath: thumb
+		})
+	}
+
+	return image
 }

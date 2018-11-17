@@ -1,48 +1,86 @@
 import sharp from 'sharp'
-import fs, { createWriteStream } from 'fs'
-import Image from '../models/Image'
-import { CATALOGS_DIR } from './config'
+import fs from 'fs'
+import del from 'del'
+import { UPLOAD_DIR, CATALOGS_DIR } from './config'
 
-export function makeCatalogDirs(catalog, company) {
-	const catalogDir = `${CATALOGS_DIR}/${catalog}-${company}`
-	const originalsDir = `${catalogDir}/originals`
-	const thumbnailsDir = `${catalogDir}/thumbnails`
+export function makeCatalogDir(catalogName, companyName, index) {
+	const catalogDir = `${CATALOGS_DIR}/${catalogName}-${companyName}`
 
-	if (!fs.existsSync(CATALOGS_DIR)) { fs.mkdirSync(CATALOGS_DIR) }
-	if (!fs.existsSync(catalogDir)) {
-		fs.mkdirSync(catalogDir)
-		fs.mkdirSync(originalsDir)
-		fs.mkdirSync(thumbnailsDir)
-	}
+	!index && !fs.existsSync(`${UPLOAD_DIR}/${catalogDir}`) && fs.mkdirSync(`${UPLOAD_DIR}/${catalogDir}`)
 
-	return { catalogDir, originalsDir, thumbnailsDir }
+	return catalogDir
 }
 
-export async function storeCatalogImage ({ dir, isFace, isThumb, stream, filename }) {	
-	if (isFace) {
-		const faceTransformer = sharp()
-			.resize({ width: 350, height: 461, fit: 'cover', position: 'right top'	})
-		const mime = filename.split('.').pop()
-		filename = `face.${mime}`
-		stream = stream.pipe(faceTransformer)
+export function removeCatalogDir(someImagePath) {
+	const catalogDir = someImagePath.split('/').slice(0, -1).join('/')
+	return del(`${UPLOAD_DIR}/${catalogDir}`)
+}
+
+export async function splitCatalogImage (dir, mime, index, length, fileStream) {
+	const writableStream = sharp()
+	fileStream.pipe(writableStream)
+
+	const { width, height } = await writableStream.metadata()
+	const resizeParams = { width: 850, height: 1120, fit: 'cover', position: 'left top' }
+
+	if (width > height) {
+		const leftName = index ? index * 2 : length * 2
+		const rightName = index ? index * 2 + 1 : 1
+		const leftPath = `${dir}/${leftName}.${mime}`
+		const rightPath = `${dir}/${rightName}.${mime}`
+		return Promise.all([
+			storeSplittedImage(writableStream, leftPath, resizeParams),
+			storeSplittedImage(writableStream, rightPath, { ...resizeParams, position: 'right top' })
+		])
+	} else {
+		const name = index ? length * 2 - 2 : 1
+		const path = `${dir}/${name}.${mime}`
+		writableStream.resize(resizeParams)
+
+		return new Promise((resolve, reject) => {
+			writableStream
+				.pipe(fs.createWriteStream(`${UPLOAD_DIR}/${path}`))
+				.on('finish', () => resolve([path]))
+				.on('error', reject)
+		})
 	}
+}
 
-	if (isThumb) {
-		const thumbnailTransformer = sharp().resize({ width: 150 })
-		stream = stream.pipe(thumbnailTransformer)
-	}
-
-	const path = `${dir}/${filename}`
-
+function storeSplittedImage(writableStream, path, resizeParams) {
 	return new Promise((resolve, reject) => {
-		stream.pipe(createWriteStream(path))
-			.on('finish', async () => {
-				let image = await Image.findOne({ path })
-				if (!image) {
-					image = await Image.create({ path })					
-				}
-				resolve(image)
-			})
+		writableStream
+			.clone()
+			.resize(resizeParams)
+			.pipe(fs.createWriteStream(`${UPLOAD_DIR}/${path}`))
+			.on('finish', () => resolve(path))
 			.on('error', reject)
+	})
+}
+
+export function makeCatalogImageItem(dir, name, mime, item, fileStream) {
+	return new Promise((resolve, reject) => {
+		const filename = `${name}-${item}.${mime}`
+		const path = `${dir}/${filename}`
+		
+		const params = {
+			face: { width: 350, height: 461 },
+			thumb: { width: 75, height: 98 }
+		}
+		const writableStream = sharp()
+		fileStream.pipe(writableStream)
+		writableStream
+			.clone()
+			.resize({ ...params[item], fit: 'cover', position: 'right top'	})
+			.pipe(fs.createWriteStream(`${UPLOAD_DIR}/${path}`))
+			.on('finish', () => resolve(path))
+			.on('error', reject)
+	})
+}
+
+export function renameImage(oldPath, newPath) {
+	return new Promise((resolve, reject) => {
+		fs.rename(`${UPLOAD_DIR}/${oldPath}`, `${UPLOAD_DIR}/${newPath}`, err => {
+			err ? reject() : resolve()
+		})
 	})
 }
