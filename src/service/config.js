@@ -15,6 +15,6 @@ exports.COOKIE_SECRET = process.env.COOKIE_SECRET
 exports.ADMIN_USERNAME = process.env.ADMIN_USERNAME
 exports.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 exports.JWT_SECRET = process.env.JWT_SECRET
-exports.JWT_EXPIRE = isProd ? process.env.JWT_EXPIRE : '365 days'
+exports.JWT_EXPIRE = isProd ? +process.env.JWT_EXPIRE : 60 * 60 * 24 * 365
 exports.UPLOAD_DIR = process.env.UPLOAD_DIR
 exports.CATALOGS_DIR = process.env.CATALOGS_DIR

@@ -1,14 +1,13 @@
 scalar Date
 
 type Query {
-	getCurrentUser: UserType
+	currentUser: User
 	getAllCompanies: [CompanyType]
 	getAllCatalogs(current: Boolean): [CatalogType]
 	getCatalog(number: String!, year: String!, name: String!): CatalogType
 }
 
 type Mutation {
-	loginUser(username: String!, password: String!): TokenType
 	addCompany(number: Int!, year: Int!, startDate: Date!, finishDate: Date!): CompanyType
 	removeCompany(id: ID!): Boolean
 	uploadCatalogImage(catalogName: String!, companyId: ID!, companyName: String!, file: Upload!, index: Int!, length: Int!): [ImageType]
@@ -16,11 +15,7 @@ type Mutation {
 	removeCatalog(catalogId: ID!, companyId: ID!): Boolean
 }
 
-type TokenType {
-	token: String!
-}
-
-type UserType {
+type User {
 	id: ID!
 	username: String!
 	password: String!

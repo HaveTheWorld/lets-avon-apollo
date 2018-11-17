@@ -13,13 +13,31 @@ module.exports = app => {
 	const server = new ApolloServer({
 		typeDefs,
 		resolvers,
-		context: ({ req }) => ({
-			currentUser: req.currentUser,
-			User,
-			Company,
-			Catalog,
-			Image
-		}),
+		context: async ({ req }) => {
+
+			// Development debugging
+			if (IS_DEV) {
+				const colors = require('colors')
+				const { operationName } = req.body
+				
+				if (!operationName) { return }
+
+				const bgcolor
+					= /Query$/.test(operationName) ? 'bgGreen'
+					: /Mutation$/.test(operationName) ? 'bgYellow'
+					: 'bgWhite'
+
+				console.log(`operation: ${req.body.operationName}`[bgcolor].black)
+			}
+
+			return {
+				user: req.user && await User.findById(req.user.id),
+				User,
+				Company,
+				Catalog,
+				Image
+			}
+		},
 		playground: IS_DEV
 	})
 	server.applyMiddleware({ app, path: ENDPOINT_PATH })
