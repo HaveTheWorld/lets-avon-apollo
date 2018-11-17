@@ -36,7 +36,6 @@ export const addCatalog = async (parent, { name, title, companyId, imagesIds }, 
 			removeCatalogDir(firstImage.path),
 			Image.deleteMany({ _id: { $in: imagesIds } })
 		])
-		console.log(2)
 		throw new Error('Нечётное количество страниц. Картинки не загружены.')
 	}
 
