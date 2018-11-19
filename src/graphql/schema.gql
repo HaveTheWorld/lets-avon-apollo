@@ -2,14 +2,14 @@ scalar Date
 
 type Query {
 	currentUser: User
-	getAllCompanies: [CompanyType]
+	companies: [Company]
 	getAllCatalogs(current: Boolean): [CatalogType]
 	getCatalog(number: String!, year: String!, name: String!): CatalogType
 }
 
 type Mutation {
 	loginUser(username: String!, password: String!): Login
-	addCompany(number: Int!, year: Int!, startDate: Date!, finishDate: Date!): CompanyType
+	addCompany(input: AddCompanyInput!): Company
 	removeCompany(id: ID!): Boolean
 	uploadCatalogImage(catalogName: String!, companyId: ID!, companyName: String!, file: Upload!, index: Int!, length: Int!): [ImageType]
 	addCatalog(name: String!, title: String!, companyId: ID!, imagesIds: [ID]!): CatalogType
@@ -29,7 +29,7 @@ type User {
 	role: String!
 }
 
-type CompanyType {
+type Company {
 	id: ID!
 	number: String!
 	year: String!
@@ -50,7 +50,14 @@ type CatalogType {
 	id: ID!
 	name: String!
 	title: String!
-	company: CompanyType!
+	company: Company!
 	count: Int!
 	images: [ImageType!]!
+}
+
+input AddCompanyInput {
+	number: Int!
+	year: Int!
+	startDate: Date!
+	finishDate: Date!
 }

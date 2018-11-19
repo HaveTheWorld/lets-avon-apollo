@@ -1,22 +1,20 @@
 // Queries
-exports.getAllCompanies = (parent, args, { Company }) => {
-	return Company.find()
+exports.companies = async (parent, args, { Company }) => {
+	return await Company.find()
 }
 
 // Mutations
-exports.addCompany = async (parent, { number, year, startDate, finishDate }, { Company }) => {
-	// const company = await Company.findOne({ number, year })
+exports.addCompany = async (parent, { input }, { Company }) => {
+	const { number, year, startDate, finishDate } = input
+	const company = await Company.findOne({ number, year })
 
-	// if (company) { throw new Error('Такая кампания уже есть в базе данных.') }
+	if (company) { throw new Error('Такая кампания уже существует.') }
 	if (startDate >= finishDate) { throw new Error('Дата начала должна быть раньше даты конца кампании.') }
 
-	return Company.create({ number, year, startDate, finishDate })
+	return await Company.create({ number, year, startDate, finishDate })
 }
 
 exports.removeCompany = async (parent, { id }, { Company }) => {
-	if (!id) { throw new Error('Некорректно передан идентификатор.') }
-
 	await Company.deleteOne({ _id: id })
-
 	return true
 }

@@ -1,14 +1,14 @@
 const { Kind } = require('graphql/language')
 const { GraphQLUpload } = require('graphql-upload')
 const { currentUser, loginUser } = require('./resolvers/auth')
-const { getAllCompanies, addCompany, removeCompany } = require('./resolvers/companies')
+const { companies, addCompany, removeCompany } = require('./resolvers/companies')
 const { uploadCatalogImage } = require('./resolvers/images')
 const { getAllCatalogs, getCatalog, addCatalog, removeCatalog } = require('./resolvers/catalogs')
 
 module.exports = {
 	Query: {
 		currentUser,
-		getAllCompanies,
+		companies,
 		getAllCatalogs,
 		getCatalog
 	},
