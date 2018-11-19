@@ -7,8 +7,8 @@ const CompanySchema = new Schema({
 	year: { type: Number, match: /^\d{4}$/, required: true },
 	startDate: { type: Date, required: true },
 	finishDate: { type: Date, required: true },
-	catalogs: [
-		{ type: Schema.Types.ObjectId, ref: 'Catalog' }
+	catalogsIds: [
+		{ type: String }
 	]
 }, { versionKey: false })
 

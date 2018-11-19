@@ -3,12 +3,37 @@ const fs = require('fs')
 const del = require('del')
 const { UPLOAD_DIR, CATALOGS_DIR } = require('./config')
 
-exports.makeCatalogDir = (catalogName, companyName, index) => {
-	const catalogDir = `${CATALOGS_DIR}/${catalogName}-${companyName}`
+exports.uploadCatalogImage = async (input, Catalog, Image) => {
+	const { catalogName, companyId, companyName, file, index, length } = input
 
-	!index && !fs.existsSync(`${UPLOAD_DIR}/${catalogDir}`) && fs.mkdirSync(`${UPLOAD_DIR}/${catalogDir}`)
+	if (!index) {
+		const catalog = await Catalog.findOne({ name: catalogName, companyId })
+		if (catalog) { throw new Error('В этой кампании уже есть такой каталог.') }
+	}
 
-	return catalogDir
+	const { stream, filename } = await file
+	const [name, mime] = filename.split('.')
+
+	const dir = makeCatalogDir(catalogName, companyName, index)
+
+	let tasks = [splitCatalogImage(dir, mime, index, length, stream)]
+	if (!index) {
+		tasks = tasks.concat(
+			Promise.all([
+				makeCatalogImageItem(dir, '1', mime, 'face', stream),
+				makeCatalogImageItem(dir, '1', mime, 'thumb', stream)
+			])
+		)
+	}
+
+	const result = await Promise.all(tasks)
+	const [left, right] = result[0].sort((a, b) => a === b ? 0 : a > b)
+	const [face, thumb] = result[1] ? result[1] : []
+
+	const images = [createImage(Image, left, face, thumb)]
+	right && images.push(createImage(Image, right))
+
+	return Promise.all(images)
 }
 
 exports.removeCatalogDir = (someImagePath) => {
@@ -16,7 +41,34 @@ exports.removeCatalogDir = (someImagePath) => {
 	return del(`${UPLOAD_DIR}/${catalogDir}`)
 }
 
-exports.splitCatalogImage = async (dir, mime, index, length, fileStream) => {
+async function createImage(Image, path, face, thumb) {
+	const index = +path.split('/').pop().split('.')[0]
+	let image = await Image.findOne({ path })
+
+	if (image) {
+		image.set('catalogIndex', index)
+		image.set('catalogFacePath', face)
+		image.set('catalogThumbPath', thumb)
+		image.save()
+	} else {
+		image = Image.create({
+			path,
+			catalogIndex: index,
+			catalogFacePath: face,
+			catalogThumbPath: thumb
+		})
+	}
+
+	return image
+}
+
+function makeCatalogDir (catalogName, companyName, index) {
+	const catalogDir = `${CATALOGS_DIR}/${catalogName}-${companyName}`
+	!index && !fs.existsSync(`${UPLOAD_DIR}/${catalogDir}`) && fs.mkdirSync(`${UPLOAD_DIR}/${catalogDir}`)
+	return catalogDir
+}
+
+async function splitCatalogImage (dir, mime, index, length, fileStream) {
 	const writableStream = sharp()
 	fileStream.pipe(writableStream)
 
@@ -57,7 +109,7 @@ function storeSplittedImage(writableStream, path, resizeParams) {
 	})
 }
 
-exports.makeCatalogImageItem = (dir, name, mime, item, fileStream) => {
+function makeCatalogImageItem (dir, name, mime, item, fileStream) {
 	return new Promise((resolve, reject) => {
 		const filename = `${name}-${item}.${mime}`
 		const path = `${dir}/${filename}`
@@ -74,13 +126,5 @@ exports.makeCatalogImageItem = (dir, name, mime, item, fileStream) => {
 			.pipe(fs.createWriteStream(`${UPLOAD_DIR}/${path}`))
 			.on('finish', () => resolve(path))
 			.on('error', reject)
-	})
-}
-
-exports.renameImage = (oldPath, newPath) => {
-	return new Promise((resolve, reject) => {
-		fs.rename(`${UPLOAD_DIR}/${oldPath}`, `${UPLOAD_DIR}/${newPath}`, err => {
-			err ? reject() : resolve()
-		})
 	})
 }

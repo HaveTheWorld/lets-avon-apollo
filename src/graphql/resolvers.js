@@ -1,38 +1,15 @@
-const { Kind } = require('graphql/language')
 const { GraphQLUpload } = require('graphql-upload')
-const { currentUser, loginUser } = require('./resolvers/auth')
-const { companies, addCompany, removeCompany } = require('./resolvers/companies')
-const { uploadCatalogImage } = require('./resolvers/images')
-const { getAllCatalogs, getCatalog, addCatalog, removeCatalog } = require('./resolvers/catalogs')
+const DateType = require('./resolvers/Date')
+const Query = require('./resolvers/Query')
+const Mutation = require('./resolvers/Mutation')
+const Company = require('./resolvers/Company')
+const Catalog = require('./resolvers/Catalog')
 
 module.exports = {
-	Query: {
-		currentUser,
-		companies,
-		getAllCatalogs,
-		getCatalog
-	},
-	Mutation: {
-		loginUser,
-		addCompany,
-		removeCompany,
-		uploadCatalogImage,
-		addCatalog,
-		removeCatalog
-	},
 	Upload: GraphQLUpload,
-	Date: {
-		__parseValue(value) {
-			return value // value from the client
-		},
-		__serialize(value) {
-			return value // value sent to the client
-		},
-		__parseLiteral(ast) {
-			if (ast.kind === Kind.INT) {
-				return parseInt(ast.value, 10) // ast value is always in string format
-			}
-			return null
-		}
-	}
+	Date: DateType,
+	Query,
+	Mutation,
+	Company,
+	Catalog
 }

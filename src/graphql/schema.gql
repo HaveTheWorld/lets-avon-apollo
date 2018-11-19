@@ -3,16 +3,17 @@ scalar Date
 type Query {
 	currentUser: User
 	companies: [Company]
-	getAllCatalogs(current: Boolean): [CatalogType]
-	getCatalog(number: String!, year: String!, name: String!): CatalogType
+	currentCompany: Company
+	catalogs: [Catalog]
+	catalog(number: String!, year: String!, name: String!): Catalog
 }
 
 type Mutation {
 	loginUser(username: String!, password: String!): Login
 	addCompany(input: AddCompanyInput!): Company
 	removeCompany(id: ID!): Boolean
-	uploadCatalogImage(catalogName: String!, companyId: ID!, companyName: String!, file: Upload!, index: Int!, length: Int!): [ImageType]
-	addCatalog(name: String!, title: String!, companyId: ID!, imagesIds: [ID]!): CatalogType
+	uploadCatalogImage(input: AddCatalogImageInput!): [Image]
+	addCatalog(input: AddCatalogInput!): Catalog
 	removeCatalog(catalogId: ID!, companyId: ID!): Boolean
 }
 
@@ -35,10 +36,10 @@ type Company {
 	year: String!
 	startDate: Date!
 	finishDate: Date!
-	catalogs: [CatalogType]
+	catalogs: [Catalog]!
 }
 
-type ImageType {
+type Image {
 	id: ID!
 	path: String!
 	catalogThumbPath: String
@@ -46,13 +47,13 @@ type ImageType {
 	catalogIndex: Int
 }
 
-type CatalogType {
+type Catalog {
 	id: ID!
 	name: String!
 	title: String!
 	company: Company!
 	count: Int!
-	images: [ImageType!]!
+	images: [Image!]!
 }
 
 input AddCompanyInput {
@@ -60,4 +61,20 @@ input AddCompanyInput {
 	year: Int!
 	startDate: Date!
 	finishDate: Date!
+}
+
+input AddCatalogImageInput {
+	catalogName: String!
+	companyId: ID!
+	companyName: String!
+	file: Upload!
+	index: Int!
+	length: Int!
+}
+
+input AddCatalogInput {
+	name: String!
+	title: String!
+	companyId: ID!
+	imagesIds: [ID!]!
 }
