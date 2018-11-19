@@ -27,10 +27,12 @@ function collapseArrays(query) {
 mongoose.connect(MONGO_URL, params)
 	.then(async (info) => {
 		try {
-			const admin = await User.findOne({ isAdmin: true })
+			// Check or create first admin user
+			const admin = await User.findOne({ role: 'admin' })
 			if (!admin) {
-				await User.create({ username: ADMIN_USERNAME, password: ADMIN_PASSWORD, isAdmin: true })
+				await User.create({ username: ADMIN_USERNAME, password: ADMIN_PASSWORD, role: 'admin' })
 			}
+
 			const { name } = info.connections[0]
 			console.log(`[mongoose] Connencted to db @ ${name}`)
 			

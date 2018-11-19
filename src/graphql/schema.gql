@@ -8,6 +8,7 @@ type Query {
 }
 
 type Mutation {
+	loginUser(username: String!, password: String!): Login
 	addCompany(number: Int!, year: Int!, startDate: Date!, finishDate: Date!): CompanyType
 	removeCompany(id: ID!): Boolean
 	uploadCatalogImage(catalogName: String!, companyId: ID!, companyName: String!, file: Upload!, index: Int!, length: Int!): [ImageType]
@@ -15,11 +16,17 @@ type Mutation {
 	removeCatalog(catalogId: ID!, companyId: ID!): Boolean
 }
 
+type Login {
+	user: User!
+	token: String!
+	expires: Date!
+}
+
 type User {
 	id: ID!
 	username: String!
 	password: String!
-	isAdmin: Boolean
+	role: String!
 }
 
 type CompanyType {

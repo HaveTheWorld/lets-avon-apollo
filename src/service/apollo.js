@@ -31,7 +31,7 @@ module.exports = app => {
 			}
 
 			return {
-				user: req.user && await User.findById(req.user.id),
+				user: /*!/^login/.test(operationName) ? */req.user && await User.findById(req.user.id)/* : null*/,
 				User,
 				Company,
 				Catalog,
