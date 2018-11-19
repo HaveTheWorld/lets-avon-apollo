@@ -1,20 +1,20 @@
-import path from 'path'
-import dotenv from 'dotenv'
+const path = require('path')
+const dotenv = require('dotenv')
 
 const root = path.join.bind(this, __dirname, '../../')
 dotenv.config({ path: root('.env') })
 
-export const IS_PROD = process.env.NODE_ENV === 'production'
-export const IS_DEV = !IS_PROD
+const isProd = process.env.NODE_ENV === 'production'
 
-export const HOST = process.env.HOST
-export const PORT = process.env.PORT
-export const ENDPOINT_PATH = process.env.ENDPOINT_PATH
-export const MONGO_URL = process.env.MONGO_URL
-export const COOKIE_SECRET = process.env.COOKIE_SECRET
-export const ADMIN_USERNAME = process.env.ADMIN_USERNAME
-export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
-export const JWT_SECRET = process.env.JWT_SECRET
-export const JWT_EXPIRE = IS_PROD ? process.env.JWT_EXPIRE : '365 days'
-export const UPLOAD_DIR = process.env.UPLOAD_DIR
-export const CATALOGS_DIR = process.env.CATALOGS_DIR
+exports.IS_DEV = !isProd
+exports.HOST = process.env.HOST
+exports.PORT = process.env.PORT
+exports.ENDPOINT_PATH = process.env.ENDPOINT_PATH
+exports.MONGO_URL = process.env.MONGO_URL
+exports.COOKIE_SECRET = process.env.COOKIE_SECRET
+exports.ADMIN_USERNAME = process.env.ADMIN_USERNAME
+exports.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+exports.JWT_SECRET = process.env.JWT_SECRET
+exports.JWT_EXPIRE = isProd ? +process.env.JWT_EXPIRE : 60 * 60 * 24 * 365
+exports.UPLOAD_DIR = process.env.UPLOAD_DIR
+exports.CATALOGS_DIR = process.env.CATALOGS_DIR

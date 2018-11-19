@@ -1,13 +1,13 @@
-import mongoose from 'mongoose'
-import bcrypt from 'bcryptjs'
+const mongoose = require('mongoose')
+const bcrypt = require('bcryptjs')
 
 const { Schema } = mongoose
 
 const UserSchema = new Schema({
 	username: { type: String, required: true, unique: true },
 	password: { type: String, required: true },
-	isAdmin: { type: Boolean, default: false }
-})
+	role: { type: String, enum: ['user', 'editor', 'admin'], default: 'user' }
+}, { versionKey: false })
 
 UserSchema.pre('save', async function(next) {
 	if (!this.isModified('password')) { return next() }
@@ -26,4 +26,4 @@ UserSchema.methods.comparePassword = async function(password) {
 	return await bcrypt.compare(password, this.password)
 }
 
-export default mongoose.model('User', UserSchema)
+module.exports = mongoose.model('User', UserSchema)

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+const mongoose = require('mongoose')
 
 const { Schema } = mongoose
 
@@ -7,11 +7,11 @@ const CompanySchema = new Schema({
 	year: { type: Number, match: /^\d{4}$/, required: true },
 	startDate: { type: Date, required: true },
 	finishDate: { type: Date, required: true },
-	catalogs: [
-		{ type: Schema.Types.ObjectId, ref: 'Catalog' }
+	catalogsIds: [
+		{ type: String }
 	]
-})
+}, { versionKey: false })
 
 CompanySchema.index({number: 1, year: 1}, { unique: true })
 
-export default mongoose.model('Company', CompanySchema)
+module.exports = mongoose.model('Company', CompanySchema)
