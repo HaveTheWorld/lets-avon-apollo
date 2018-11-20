@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const { JWT_SECRET, JWT_EXPIRE } = require('../../service/config')
 const { uploadCatalogImage, removeCatalogDir } = require('../../service/upload-catalog-image')
+const { requireRole } = require('../../service/require-role')
 
 module.exports = {
 	loginUser: async (parent, { username, password }, { User }) => {
@@ -17,7 +18,31 @@ module.exports = {
 		
 		return loginData
 	},
-	addCompany: async (parent, { input }, { Company }) => {
+	addUser: async (parent, { username, password, role }, { User, user }) => {
+		requireRole(user, 'admin')
+		
+		if (role && !['user', 'editor', 'admin'].includes(role)) {
+			throw new Error('Неверно указана роль пользователя.')
+		}
+
+		const existedUser = await User.findOne({ username })
+		if (existedUser) { throw new Error('Пользователь с таким именем уже существует.') }
+
+		return await User.create({ username, password, role })
+	},
+	removeUser: async (parent, { id }, { User, user }) => {
+		requireRole(user, 'admin')
+
+		if (id == user.id) { throw new Error('Аккаунт, с которого выполнен вход, удалить нельзя.') }
+
+		const { n } = await User.deleteOne({ _id: id, canBeRemoved: true })
+		if (!n) { throw new Error('Пользователь не был удалён.') }
+
+		return true
+	},
+	addCompany: async (parent, { input }, { Company, user }) => {
+		requireRole(user, ['editor', 'admin'])
+
 		const { number, year, startDate, finishDate } = input
 		const company = await Company.findOne({ number, year })
 
@@ -26,14 +51,20 @@ module.exports = {
 
 		return await Company.create({ number, year, startDate, finishDate })
 	},
-	removeCompany: async (parent, { id }, { Company }) => {
+	removeCompany: async (parent, { id }, { Company, user }) => {
+		requireRole(user, ['editor', 'admin'])
+
 		await Company.deleteOne({ _id: id })
 		return true
 	},
-	uploadCatalogImage: async (parent, { input }, { Catalog, Image }) => {
+	uploadCatalogImage: async (parent, { input }, { Catalog, Image, user }) => {
+		requireRole(user, ['editor', 'admin'])
+		
 		return await uploadCatalogImage(input, Catalog, Image)	
 	},
-	addCatalog: async (parent, { input }, { Company, Catalog, Image }) => {
+	addCatalog: async (parent, { input }, { Company, Catalog, Image, user }) => {
+		requireRole(user, ['editor', 'admin'])
+		
 		const { name, title, companyId, imagesIds } = input
 
 		let [company, catalog, images] = await Promise.all([
@@ -60,7 +91,9 @@ module.exports = {
 
 		return catalog
 	},
-	removeCatalog: async (parent, { catalogId, companyId }, { Catalog, Image, Company }) => {
+	removeCatalog: async (parent, { catalogId, companyId }, { Catalog, Image, Company, user }) => {
+		requireRole(user, ['editor', 'admin'])
+
 		const [catalog, company] = await Promise.all([
 			Catalog.findById(catalogId),
 			Company.findById(companyId)

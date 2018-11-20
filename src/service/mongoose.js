@@ -30,7 +30,12 @@ mongoose.connect(MONGO_URL, params)
 			// Check or create first admin user
 			const admin = await User.findOne({ role: 'admin' })
 			if (!admin) {
-				await User.create({ username: ADMIN_USERNAME, password: ADMIN_PASSWORD, role: 'admin' })
+				await User.create({
+					username: ADMIN_USERNAME,
+					password: ADMIN_PASSWORD,
+					role: 'admin',
+					canBeRemoved: false
+				})
 			}
 
 			const { name } = info.connections[0]

@@ -31,11 +31,11 @@ module.exports = app => {
 			}
 
 			return {
-				user: /*!/^login/.test(operationName) ? */req.user && await User.findById(req.user.id)/* : null*/,
+				user: req.user && await User.findById(req.user.id)/* : null*/,
 				User,
 				Company,
 				Catalog,
-				Image
+				Image				
 			}
 		},
 		playground: IS_DEV
