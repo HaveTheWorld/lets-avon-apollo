@@ -40,6 +40,25 @@ module.exports = {
 
 		return true
 	},
+	editUser: async (parent, { id, username, password, role }, { User, user }) => {
+		requireRole(user, 'admin')
+		// TODO: check username is busy
+		const [existedUser, busyUsername] = await Promise.all([
+			User.findById(id),
+			User.findOne({ username })
+		])
+
+		if (!existedUser) { throw new Error('Неверно указан пользователь.') }
+		if (username !== existedUser.username && busyUsername) {
+			throw new Error('Пользователь с таким именем уже существует.')
+		}
+
+		username && existedUser.set('username', username)
+		password && existedUser.set('password', password)
+		role && existedUser.set('role', role)
+
+		return await existedUser.save()
+	},
 	addCompany: async (parent, { input }, { Company, user }) => {
 		requireRole(user, ['editor', 'admin'])
 

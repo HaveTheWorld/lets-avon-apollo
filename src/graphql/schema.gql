@@ -3,6 +3,7 @@ scalar Date
 type Query {
 	currentUser: User
 	users: [User]
+	user(username: String!): User
 	companies: [Company]
 	currentCompany: Company
 	catalogs: [Catalog]
@@ -13,6 +14,7 @@ type Mutation {
 	loginUser(username: String!, password: String!): Login
 	addUser(username: String!, password: String!, role: String): User
 	removeUser(id: ID!): Boolean
+	editUser(id: ID!, username: String, password: String, role: String): User
 	addCompany(input: AddCompanyInput!): Company
 	removeCompany(id: ID!): Boolean
 	uploadCatalogImage(input: AddCatalogImageInput!): [Image]

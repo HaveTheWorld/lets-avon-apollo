@@ -5,8 +5,12 @@ module.exports = {
 		return user
 	},
 	users: async (parent, args, { User, user }) => {
-		requireRole('admin')
+		requireRole(user, 'admin')
 		return await User.find()
+	},
+	user: async (parent, { username }, { User, user }) => {
+		requireRole(user, 'admin')
+		return await User.findOne({ username })
 	},
 	companies: async (parent, args, { Company }) => {
 		return await Company.find()
