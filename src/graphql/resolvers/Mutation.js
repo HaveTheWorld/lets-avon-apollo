@@ -3,21 +3,67 @@ const { JWT_SECRET, JWT_EXPIRE } = require('../../service/config')
 const { uploadCatalogImage, removeCatalogDir } = require('../../service/upload-catalog-image')
 
 module.exports = {
-	loginUser: async (parent, { username, password }, { User }) => {
+	loginUser: async (parent, { username, password }, { User, setCookie }) => {
+		setCookie('token', '', { maxAge: -1 })
+
 		const user = await User.findOne({ username })
 		if (!user || !await user.comparePassword(password)) {
 			throw new Error('Неверные имя пользователя или пароль.')
 		}
 
-		const loginData = {
-			user,
-			token: await jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: JWT_EXPIRE }),
-			expires: Date.now() + JWT_EXPIRE * 1000
-		}
+		const token = await jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: JWT_EXPIRE })
+		setCookie('token', token, { maxAge: JWT_EXPIRE * 1000 })
 		
-		return loginData
+		return user
 	},
-	addCompany: async (parent, { input }, { Company }) => {
+	logoutUser: (parent, args, { setCookie }) => {
+		setCookie('token', '', { maxAge: -1 })
+		return true
+	},
+	addUser: async (parent, { username, password, role }, { User, requireRole }) => {
+		requireRole('admin')
+		
+		if (role && !['user', 'editor', 'admin'].includes(role)) {
+			throw new Error('Неверно указана роль пользователя.')
+		}
+
+		const user = await User.findOne({ username })
+		if (user) { throw new Error('Пользователь с таким именем уже существует.') }
+
+		return await User.create({ username, password, role })
+	},
+	removeUser: async (parent, { id }, { User, user, requireRole }) => {
+		requireRole('admin')
+
+		if (id == user.id) { throw new Error('Аккаунт, с которого выполнен вход, удалить нельзя.') }
+
+		const { n } = await User.deleteOne({ _id: id, canBeRemoved: true })
+		if (!n) { throw new Error('Пользователь не был удалён.') }
+
+		return true
+	},
+	editUser: async (parent, { id, username, password, role }, { User, requireRole }) => {
+		requireRole('admin')
+		
+		const [user, busyUsername] = await Promise.all([
+			User.findById(id),
+			User.findOne({ username })
+		])
+
+		if (!user) { throw new Error('Неверно указан пользователь.') }
+		if (username !== user.username && busyUsername) {
+			throw new Error('Пользователь с таким именем уже существует.')
+		}
+
+		username && user.set('username', username)
+		password && user.set('password', password)
+		role && user.set('role', role)
+
+		return await user.save()
+	},
+	addCompany: async (parent, { input }, { Company, requireRole }) => {
+		requireRole(['editor', 'admin'])
+
 		const { number, year, startDate, finishDate } = input
 		const company = await Company.findOne({ number, year })
 
@@ -26,14 +72,22 @@ module.exports = {
 
 		return await Company.create({ number, year, startDate, finishDate })
 	},
-	removeCompany: async (parent, { id }, { Company }) => {
-		await Company.deleteOne({ _id: id })
+	removeCompany: async (parent, { id }, { Company, requireRole }) => {
+		requireRole(['editor', 'admin'])
+		
+		const { n } = await Company.deleteOne({ _id: id })
+		if (!n) { throw new Error('Кампания не была удалена.') }
+		
 		return true
 	},
-	uploadCatalogImage: async (parent, { input }, { Catalog, Image }) => {
+	uploadCatalogImage: async (parent, { input }, { Catalog, Image, requireRole }) => {
+		requireRole(['editor', 'admin'])
+		
 		return await uploadCatalogImage(input, Catalog, Image)	
 	},
-	addCatalog: async (parent, { input }, { Company, Catalog, Image }) => {
+	addCatalog: async (parent, { input }, { Company, Catalog, Image, requireRole }) => {
+		requireRole(['editor', 'admin'])
+		
 		const { name, title, companyId, imagesIds } = input
 
 		let [company, catalog, images] = await Promise.all([
@@ -60,7 +114,9 @@ module.exports = {
 
 		return catalog
 	},
-	removeCatalog: async (parent, { catalogId, companyId }, { Catalog, Image, Company }) => {
+	removeCatalog: async (parent, { catalogId, companyId }, { Catalog, Image, Company, requireRole }) => {
+		requireRole(['editor', 'admin'])
+
 		const [catalog, company] = await Promise.all([
 			Catalog.findById(catalogId),
 			Company.findById(companyId)
