@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-
 const { Schema } = mongoose
 
 const CompanySchema = new Schema({
@@ -10,7 +9,9 @@ const CompanySchema = new Schema({
 	catalogsIds: [
 		{ type: String }
 	]
-}, { versionKey: false })
+}, {
+	versionKey: false
+})
 
 CompanySchema.index({number: 1, year: 1}, { unique: true })
 

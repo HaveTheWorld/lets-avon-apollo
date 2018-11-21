@@ -9,6 +9,8 @@ const CatalogSchema = new Schema({
 	imagesIds: [
 		{ type: String, required: true }
 	]
-}, { versionKey: false })
+}, {
+	versionKey: false
+})
 
 module.exports = mongoose.model('Catalog', CatalogSchema)

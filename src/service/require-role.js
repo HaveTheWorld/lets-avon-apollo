@@ -1,4 +1,4 @@
-exports.requireRole = (user, roles) => {
+exports.requireRole = user => roles => {
 	const error = user
 		? Array.isArray(roles)
 			? !roles.includes(user.role)
