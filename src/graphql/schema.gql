@@ -54,7 +54,7 @@ type Catalog {
 	title: String!
 	company: Company!
 	count: Int!
-	images: [Image!]!
+	images(limit: Int): [Image!]!
 }
 
 input AddCompanyInput {
