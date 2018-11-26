@@ -6,7 +6,7 @@ const UserSchema = new Schema({
 	username: { type: String, match: /^[A-Za-z0-9 \-]{2,15}$/, required: true, unique: true },
 	password: { type: String, minLength: 5, maxLength: 32, required: true },
 	role: { type: String, enum: ['user', 'editor', 'admin'], default: 'user' },
-	canBeRemoved: { type: Boolean, default: true },
+	isRootAdmin: { type: Boolean },
 }, {
 	versionKey: false
 })

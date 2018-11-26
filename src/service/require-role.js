@@ -5,5 +5,5 @@ exports.requireRole = user => roles => {
 			: roles !== user.role
 		: true
 
-	if (error) { throw new Error('Не достаточно прав для данного аккаунта') }
+	if (error) { throw new Error('Недостаточно прав для данного аккаунта') }
 }

@@ -28,7 +28,7 @@ type User {
 	username: String!
 	password: String!
 	role: String!
-	canBeRemoved: Boolean!
+	isRootAdmin: Boolean
 }
 
 type Company {

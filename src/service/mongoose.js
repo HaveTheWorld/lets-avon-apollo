@@ -12,12 +12,12 @@ mongoose.connect(MONGO_URL, params)
 	.then(async (info) => {
 		try {
 			// Check or create first admin user
-			if (!await User.findOne({ role: 'admin' })) {
+			if (!await User.findOne({ isRootAdmin: true })) {
 				await User.create({
 					username: ADMIN_USERNAME,
 					password: ADMIN_PASSWORD,
 					role: 'admin',
-					canBeRemoved: false
+					isRootAdmin: true
 				})
 			}
 

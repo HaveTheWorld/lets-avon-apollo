@@ -36,30 +36,37 @@ module.exports = {
 		requireRole('admin')
 
 		if (id == user.id) { throw new Error('Аккаунт, с которого выполнен вход, удалить нельзя.') }
+		
+		const userToRemove = await User.findById(id)
+		if (!userToRemove) { throw new Error('Неверно указан пользователь.') }
+		if (userToRemove.isRootAdmin) { throw new Error('Аккаунт главного администратора удалить нельзя.') }
 
-		const { n } = await User.deleteOne({ _id: id, canBeRemoved: true })
+		const { n } = await User.deleteOne({ _id: id })
 		if (!n) { throw new Error('Пользователь не был удалён.') }
 
 		return true
 	},
-	editUser: async (parent, { id, username, password, role }, { User, requireRole }) => {
+	editUser: async (parent, { id, username, password, role }, { User, user, requireRole }) => {
 		requireRole('admin')
 		
-		const [user, busyUsername] = await Promise.all([
+		const [userToEdit, busyUsername] = await Promise.all([
 			User.findById(id),
 			User.findOne({ username })
 		])
 
-		if (!user) { throw new Error('Неверно указан пользователь.') }
-		if (username !== user.username && busyUsername) {
+		if (!userToEdit) { throw new Error('Неверно указан пользователь.') }
+		if (userToEdit.isRootAdmin && !user.isRootAdmin) {
+			throw new Error('Недостаточно прав для данного аккаунта')
+		}
+		if (username !== userToEdit.username && busyUsername) {
 			throw new Error('Пользователь с таким именем уже существует.')
 		}
 
-		username && user.set('username', username)
-		password && user.set('password', password)
-		role && user.set('role', role)
+		username && userToEdit.set('username', username)
+		password && userToEdit.set('password', password)
+		role && userToEdit.set('role', role)
 
-		return await user.save()
+		return await userToEdit.save()
 	},
 	addCompany: async (parent, { input }, { Company, requireRole }) => {
 		requireRole(['editor', 'admin'])
